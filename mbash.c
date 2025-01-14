@@ -23,6 +23,15 @@ void automateCd(char* commande);
 void commandeCd();
 
 int main(int argc, char** argv) {
+  printf("##################################################\n");
+  printf("#                                                #\n");
+  printf("#   M     M   BBBBB    AAAAA   SSSSS   H   H     #\n");
+  printf("#   MM   MM   B    B  A     A  S       H   H     #\n");
+  printf("#   M M M M   BBBBB   AAAAAAA  SSSSS   HHHHH     #\n");
+  printf("#   M  M  M   B    B  A     A      S   H   H      #\n")
+  printf("#   M     M   BBBBB   A     A  SSSSS   H   H     #\n");
+  printf("#                                                #\n");
+  printf("##################################################\n");
   while (rester) {
     printf("\n");
     printf("%s", getRepertoireCourant());
