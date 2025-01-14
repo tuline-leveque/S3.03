@@ -9,7 +9,7 @@ char path[MAXLI];
 int pathidx;
 void mbash();
 void quitter();
-char getRepertoireCourant();
+char* getRepertoireCourant();
 char rep[MAXLI];
 int rester = 1;
 
@@ -23,6 +23,10 @@ int main(int argc, char** argv) {
         quitter();
     }
 
+    if (strcmp(cmd,"pwd\n")) {
+        getRepertoireCourant();
+    }
+
   }
   return 0;
 }
@@ -32,12 +36,16 @@ void mbash() {
   system(cmd);
 }
 
+//méthode similaire à ^C
 void quitter() {
     rester = 0;
 }
 
-char getRepertoireCourant() {
-    getcwd(rep, MAXLI);
-    println(rep);
+//méthode similaire à pwd
+char* getRepertoireCourant() {
+    if (strlen(rep) == 0) {
+        getcwd(rep, MAXLI);
+        printf("%s",rep);
+    }
     return rep;
 }
