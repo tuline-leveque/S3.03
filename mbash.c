@@ -20,6 +20,7 @@ int estMotCle(char* mot);
 char* getRepertoireCourant();
 void lancerCommandeListe(char* mot);
 void automateCd(char* commande);
+void commandeCd();
 
 
 
@@ -81,6 +82,11 @@ void lancerCommandeListe(char* mot) {
     }
 }
 
+void commandeCd(char* commande) {
+    mbash(commande);
+    getRepertoireCourant();
+}
+
 void automateCd(char* commande) {
     #define S_DEPART 0
     #define S_UN_SLASH 1
@@ -108,7 +114,7 @@ void automateCd(char* commande) {
             case S_DEPART: // ------------------------------------------------
               switch (caractereCourant) {
                   case 'c':
-                    printf("cas: c\n");
+                    //printf("cas: c\n");
                     state = S_C;
                     break;
                   default:
@@ -119,7 +125,7 @@ void automateCd(char* commande) {
             case S_C: // ------------------------------------------------
                 switch (caractereCourant) {
                     case 'd': {
-                        printf("cas: cd\n");
+                        //printf("cas: cd\n");
                         state = S_CD;
                         break;
                     }
@@ -132,12 +138,13 @@ void automateCd(char* commande) {
             case S_CD: // ------------------------------------------------
                 switch (caractereCourant) {
                     case ' ':
-                        printf("cas: cd espace\n");
+                        //printf("cas: cd espace\n");
                         state = S_CD_ESPACE;
                         break;
                     case '\n':
-                        printf("commande cd");
+                        //printf("commande cd");
                          //code pour "cd"
+                         commandeCd(cmd);
                          state = S_FINI;
                          break;
                     default :
@@ -149,19 +156,19 @@ void automateCd(char* commande) {
             case S_CD_ESPACE: // ------------------------------------------------
                 switch (caractereCourant) {
                     case '~':
-                        printf("cas: cd ~\n");
+                        //printf("cas: cd ~\n");
                         state = S_UNE_VAGUE;
                         break;
                     case '.':
-                        printf("cas: cd .\n");
+                        //printf("cas: cd .\n");
                         state = S_UN_POINT;
                         break;
                     case '/':
-                        printf("cas: cd /\n");
+                        //printf("cas: cd /\n");
                         state = S_UN_SLASH;
                         break;
                     case ' ':
-                        printf("cas: cd espaces\n");
+                        //printf("cas: cd espaces\n");
                         state = S_CD_DES_ESPACES;
                         break;
                     default :
@@ -173,12 +180,13 @@ void automateCd(char* commande) {
             case S_CD_DES_ESPACES: // ------------------------------------------------
                 switch (caractereCourant) {
                     case ' ':
-                        printf("cas: cd espaces\n");
+                        //printf("cas: cd espaces\n");
                         state = S_CD_DES_ESPACES;
                         break;
                     case '\n':
-                        printf("commande cd");
+                        //printf("commande cd");
                         //commande "cd"
+                        commandeCd(cmd);
                         state = S_FINI;
                         break;
                     default:
@@ -190,15 +198,17 @@ void automateCd(char* commande) {
             case S_UNE_VAGUE: // ------------------------------------------------
                 switch (caractereCourant) {
                     case '\n':
-                        printf("commande cd ~\n");
+                        //printf("commande cd ~\n");
                         //commande "cd ~"
+                        commandeCd(cmd);
                         state = S_FINI;
                         break;
                     default :
-                        printf("commande cd ~nom\n");
+                        //printf("commande cd ~nom\n");
                         //on récupère la fin de la commande qui est le nom après la vague
                         //commande "cd ~nom"
                         //erreur ou non
+                        commandeCd(cmd);
                         state = S_FINI;
                         break;
                 }
@@ -206,7 +216,7 @@ void automateCd(char* commande) {
             case S_UN_POINT: // ------------------------------------------------
                 switch (caractereCourant) {
                     case '.':
-                        printf("cas: cd ..\n");
+                        //printf("cas: cd ..\n");
                         state = S_DEUX_POINTS;
                         break;
                     default:
@@ -217,12 +227,13 @@ void automateCd(char* commande) {
             case S_DEUX_POINTS: // ------------------------------------------------
                 switch (caractereCourant) {
                     case '\n':
-                        printf("commande cd ..\n");
+                        //printf("commande cd ..\n");
                         //commande "cd .."
+                        commandeCd(cmd);
                         state = S_FINI;
                         break;
                     case '/':
-                        printf("cas: cd ../\n");
+                        //printf("cas: cd ../\n");
                         state = S_DEUX_POINT_UN_SLASH;
                         break;
                     default :
@@ -233,15 +244,16 @@ void automateCd(char* commande) {
             case S_DEUX_POINT_UN_SLASH: // ------------------------------------------------
                 switch (caractereCourant) {
                     case '.':
-                        printf("cas: cd ../.\n");
+                        //printf("cas: cd ../.\n");
                         compteurRetour ++;
                         state = S_UN_POINT;
                         break;
                     default:
-                        printf("commande cd ../nom\n");
+                        //printf("commande cd ../nom\n");
                         //on récupère la fin de la commande qui est le nom
                         //commande "cd ../nom"
                         //erreur ou non
+                        commandeCd(cmd);
                         state = S_FINI;
                         break;
                 }
@@ -250,17 +262,19 @@ void automateCd(char* commande) {
             case S_UN_SLASH: // ------------------------------------------------
                 switch (caractereCourant) {
                     case '\n':
-                        printf("commande cd /\n");
+                        //printf("commande cd /\n");
                         //commande "cd /"
+                        commandeCd(cmd);
                         state = S_FINI;
                         break;
 //                    case ' ':
 //                        state = S_SLASH_DES_ESPACES;
 //                        break;
                     default :
-                        printf("commande cd/chemin\n");
+                        //printf("commande cd/chemin\n");
                         //on récupère la fin de la commande qui est le chemin
                         //commande "cd /chemin"
+                        commandeCd(cmd);
                         state = S_FINI;
                         break;
                 }
