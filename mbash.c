@@ -8,11 +8,18 @@ char cmd[MAXLI];
 char path[MAXLI];
 int pathidx;
 void mbash();
+boolean rester = true;
+
 int main(int argc, char** argv) {
-  while (1) {
+  while (rester) {
     printf("Commande: ");
     fgets(cmd, MAXLI, stdin);
     mbash(cmd);
+
+    if ((cmd == "exit")||(cmd == "quitter")) {
+        quitter();
+    }
+
   }
   return 0;
 }
@@ -20,4 +27,8 @@ int main(int argc, char** argv) {
 void mbash() {
   printf("Execute: %s", cmd);
   system(cmd);
+}
+
+void quitter() {
+    rester = false;
 }
