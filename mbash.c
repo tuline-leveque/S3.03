@@ -9,6 +9,8 @@ char path[MAXLI];
 int pathidx;
 void mbash();
 void quitter();
+char getRepertoireCourant();
+char rep[MAXLI];
 int rester = 1;
 
 int main(int argc, char** argv) {
@@ -32,4 +34,10 @@ void mbash() {
 
 void quitter() {
     rester = 0;
+}
+
+char getRepertoireCourant() {
+    getcwd(rep, MAXLI);
+    println(rep);
+    return rep;
 }
