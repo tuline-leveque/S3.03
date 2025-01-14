@@ -20,8 +20,6 @@ int estMotCle(char* mot);
 char* getRepertoireCourant();
 void lancerCommandeListe(char* mot);
 
-
-
 int main(int argc, char** argv) {
   while (rester) {
     printf("\n");
@@ -53,7 +51,7 @@ void quitter() {
 //méthode similaire à pwd
 char* getRepertoireCourant() {
     if (strlen(rep) == 0) {
-        getcwd(rep, MAXLI);
+        getcwd(rep, 200);
     }
     return rep;
 }
