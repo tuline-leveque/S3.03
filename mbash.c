@@ -12,7 +12,7 @@
 char cmd[MAXNBSTR];
 char path[MAXLI];
 char rep[MAXLI];
-char* motsCles[] = {"exit\n", "quitter\n", "pwd\n"};
+char* motsCles[] = {"exit", "quitter", "pwd", "echo"};
 int rester = 1;
 int pathidx;
 char* commande[MAXNBSTR] = {};
@@ -47,8 +47,10 @@ int main(int argc, char** argv) {
     cmd[strlen(cmd)-1]= '\0';
     stringSlicer(cmd, commande);
     int i = 0;
-    automateCd(cmd);
-    lancerCommandeListe(commande);
+    //automateCd(cmd);
+    printf("cmd : %s\n", cmd);
+    printf("commande :%s\n",commande[0]);
+    lancerCommandeListe(commande[0]);
   }
   return 0;
 }
@@ -93,15 +95,24 @@ void lancerCommandeListe(char* commande[MAXNBSTR]) {
         else if (strcmp(mot,"pwd") == 0) {
             printf("%s", getRepertoireCourant());
         } else if (strcmp(mot,"cd") == 0){
-            printf("yahaha !\n");
-            printf("cd :%s",commande[i+1]);
-            commandeCd(commande[i+1]);
+            //printf("yahaha !\n");
+            //printf("cd :%s",commande[i+1]);
+            automateCd(cmd);
             i++;
+        } else if (strcmp(mot, "echo")) {
+            printf("test");
+            ecrire(cmd);
         } else {
             mbash(mot);
         }
         i++;
     }
+}
+
+void ecrire(char* commande) {
+    char* texte;
+    texte = calloc(commande[5],1);
+    printf("%s", texte);
 }
 
 void commandeCd(char* commande) {
