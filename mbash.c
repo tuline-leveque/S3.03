@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <assert.h>
+
 #define MAXLI 2048
 #define S_FINI 1000
 
@@ -23,7 +24,7 @@ void lancerCommandeListe(char* mot);
 void automateCd(char* commande);
 void commandeCd();
 void stringSlicer(char* string, char* result[MAXLI]);
-void stringSlicerPutIntoList(char* mot, char* liste[MAXLI], int index);
+//void stringSlicerPutIntoList(char* mot, char* liste[MAXLI], int index);
 
 int main(int argc, char** argv) {
   printf("##################################################\n");
@@ -96,6 +97,15 @@ void commandeCd(char* commande) {
     mbash(commande);
     //getRepertoireCourant();
     getcwd(rep, MAXLI);
+}
+
+void commandeCdDirectory(char* directory) {
+    if (chdir(directory) != 0) {
+       printf("%s%s","Impossible de se placer dans le dossier ", directory);
+    } else {
+        printf("%s%s","Déplacement dans le dossier ", directory);
+        getcwd(rep, MAXLI);
+    }
 }
 
 void automateCd(char* commande) {
@@ -259,11 +269,22 @@ void automateCd(char* commande) {
                         state = S_UN_POINT;
                         break;
                     default:
-                        //printf("commande cd ../nom\n");
+                        compteurRetour ++;
+                        printf("commande cd ../nom\n");
                         //on récupère la fin de la commande qui est le nom
                         //commande "cd ../nom"
                         //erreur ou non
-                        commandeCd(cmd);
+                        char directory[MAXLI];
+                        //on enlève cd espace
+                        int longueur = strlen(&cmd[3]);
+                        strncpy(directory, &cmd[3], longueur);
+                        //à chaque fois qu'il y a un "../", on retire 3 caractères
+                        for (int i=0; i<compteurRetour; i++) {
+                            longueur = strlen(&directory[3]);
+                            strncpy(directory, &directory[3], longueur);
+                        }
+                        commandeCdDirectory(directory);
+                        printf("test");
                         state = S_FINI;
                         break;
                 }
@@ -365,7 +386,7 @@ void stringSlicer(char* string, char* result[MAXLI]){
                         state = S_FINI;
                         break;
                     case '\'':
-                        stringSlicerPutIntoList(mot, result, nbResultats);
+                        //stringSlicerPutIntoList(mot, result, nbResultats);
                         nbResultats++;
                         state = S_DEPART;
                         break;
@@ -377,12 +398,12 @@ void stringSlicer(char* string, char* result[MAXLI]){
 
                 switch(caractereCourant){
                     case '\0':
-                        stringSlicerPutIntoList(mot, result, nbResultats);
+                        //stringSlicerPutIntoList(mot, result, nbResultats);
                         nbResultats++;
                         state = S_FINI;
                         break;
                     case '\"':
-                        stringSlicerPutIntoList(mot, result, nbResultats);
+                        //stringSlicerPutIntoList(mot, result, nbResultats);
                         nbResultats++;
                         state = S_DEPART;
                         break;
@@ -392,7 +413,7 @@ void stringSlicer(char* string, char* result[MAXLI]){
             case S_ESPACE :
                 if(strlen(mot) != 0){
                     mot[strlen(mot)-1] = '\0';
-                    stringSlicerPutIntoList(mot, result, nbResultats);
+                    //stringSlicerPutIntoList(mot, result, nbResultats);
                     nbResultats++;
                 }
                 switch(caractereCourant){
@@ -422,11 +443,4 @@ void stringSlicer(char* string, char* result[MAXLI]){
         }
         tete++;
     }
-}
-
-void stringSlicerPutIntoList(char* mot, char* liste[MAXLI], int index){
-    liste[index] = calloc(strlen(mot), 1);
-    strcpy(liste[index], mot);
-    free(mot);
-    mot = calloc(MEMOT, 1);
 }
