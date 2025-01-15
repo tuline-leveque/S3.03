@@ -12,7 +12,6 @@
 char cmd[MAXNBSTR];
 char path[MAXLI];
 char rep[MAXLI];
-char* motsCles[] = {"exit", "quitter", "pwd", "echo"};
 int rester = 1;
 int pathidx;
 char* commande[MAXNBSTR] = {};
@@ -20,13 +19,13 @@ char* commande[MAXNBSTR] = {};
 //déclaration des fonctions
 void mbash();
 void quitter();
-int estMotCle(char* mot);
 char* getRepertoireCourant();
 void lancerCommandeListe(char* commande[MAXNBSTR]);
 void automateCd(char* commande);
 void commandeCd();
 void stringSlicer(char* string, char* result[MAXNBSTR]);
 void stringSlicerPutIntoList(char* mot, char* liste[MAXNBSTR], int index);
+void ecrire(char* commande);
 
 int main(int argc, char** argv) {
   printf("#######################################################\n");
@@ -48,9 +47,8 @@ int main(int argc, char** argv) {
     stringSlicer(cmd, commande);
     int i = 0;
     //automateCd(cmd);
-    printf("cmd : %s\n", cmd);
-    printf("commande :%s\n",commande[0]);
-    lancerCommandeListe(commande[0]);
+    lancerCommandeListe(commande);
+    memset(commande, 0, sizeof commande);
   }
   return 0;
 }
@@ -72,23 +70,11 @@ char* getRepertoireCourant() {
     return rep;
 }
 
-//méthode qui permet de savoir si une commande entrée fait partie de la liste des mots clefs (motsClefs) ou non
-int estMotCle(char* mot){
-  int size = sizeof(motsCles)/sizeof(char*);
-  for(int i = 0; i < size; i++){
-    if(strcmp(mot, motsCles[i]) == 0){
-      return 1;
-    }
-  }
-  return 0;
-}
-
 //méthode qui permet de lancer une commande de la liste de commandes
 void lancerCommandeListe(char* commande[MAXNBSTR]) {
     int i = 0;
     while(commande[i] != NULL){
         char* mot = commande[i];
-        printf("mot : %s\n", mot);
         if ((strcmp(mot,"quitter") == 0)||(strcmp(mot,"exit")) == 0) {
             quitter();
         }
@@ -99,9 +85,9 @@ void lancerCommandeListe(char* commande[MAXNBSTR]) {
             //printf("cd :%s",commande[i+1]);
             automateCd(cmd);
             i++;
-        } else if (strcmp(mot, "echo")) {
-            printf("test");
-            ecrire(cmd);
+        } else if (strcmp(mot, "echo") == 0) {
+            ecrire(commande[i+1]);
+            i++;
         } else {
             mbash(mot);
         }
@@ -110,9 +96,7 @@ void lancerCommandeListe(char* commande[MAXNBSTR]) {
 }
 
 void ecrire(char* commande) {
-    char* texte;
-    texte = calloc(commande[5],1);
-    printf("%s", texte);
+    printf("%s\n", commande);
 }
 
 void commandeCd(char* commande) {
@@ -202,10 +186,10 @@ void automateCd(char* commande) {
                         //printf("cas: cd espace\n");
                         state = S_CD_ESPACE;
                         break;
-                    case '\n':
+                    case '\0':
                         //printf("commande cd");
                          //code pour "cd"
-                         commandeCd(&commande[3]);
+                         commandeCd("/");
                          state = S_FINI;
                          break;
                     default :
@@ -229,11 +213,15 @@ void automateCd(char* commande) {
                         state = S_UN_SLASH;
                         break;
                     case ' ':
-                        //printf("cas: cd espaces\n");
+                        printf("cas: cd espaces\n");
                         state = S_CD_DES_ESPACES;
                         break;
                     default :
-                        commandeCd(&commande[3]);
+                        if (strlen(commande) > 3) {
+                            commandeCd(&commande[3]);
+                        } else {
+                            commandeCd("/");
+                        }    
                         state = S_ERREUR;
                         break;
                 }
@@ -245,7 +233,7 @@ void automateCd(char* commande) {
                         //printf("cas: cd espaces\n");
                         state = S_CD_DES_ESPACES;
                         break;
-                    case '\n':
+                    case '\0':
                         //printf("commande cd");
                         //commande "cd"
                         commandeCd(&commande[3]);
@@ -259,7 +247,7 @@ void automateCd(char* commande) {
 
             case S_UNE_VAGUE: // ------------------------------------------------
                 switch (caractereCourant) {
-                    case '\n':
+                    case '\0':
                         //printf("commande cd ~\n");
                         //commande "cd ~"
                         commandeCd("/");
@@ -292,7 +280,7 @@ void automateCd(char* commande) {
                 break;
             case S_DEUX_POINTS: // ------------------------------------------------
                 switch (caractereCourant) {
-                    case '\n':
+                    case '\0':
                         //printf("commande cd ..\n");
                         //commande "cd .."
                         commandeCd(&commande[3]);
@@ -315,7 +303,7 @@ void automateCd(char* commande) {
                         compteurRetour ++;
                         state = S_UN_POINT;
                         break;
-                    case '\n':
+                    case '\0':
                         compteurRetour++;
                         commandeCd(&commande[3]);
                         state = S_FINI;
@@ -334,7 +322,7 @@ void automateCd(char* commande) {
 
             case S_UN_SLASH: // ------------------------------------------------
                 switch (caractereCourant) {
-                    case '\n':
+                    case '\0':
                         //printf("commande cd /\n");
                         //commande "cd /"
                         commandeCd(&commande[3]);
@@ -456,7 +444,7 @@ void stringSlicer(char* string, char* result[MAXNBSTR]){
             case S_ESPACE :
                 if(strlen(mot) != 0){
                     mot[strlen(mot)-1] = '\0';
-                    //stringSlicerPutIntoList(mot, result, nbResultats);
+                    stringSlicerPutIntoList(mot, result, nbResultats);
                     nbResultats++;
                 }
                 switch(caractereCourant){
@@ -488,7 +476,7 @@ void stringSlicer(char* string, char* result[MAXNBSTR]){
     }
 }
 
-void stringSlicerPutIntoList(char* mot, char* liste[MAXLI], int index){
+void stringSlicerPutIntoList(char* mot, char* liste[MAXNBSTR], int index){
     liste[index] = calloc(strlen(mot), 1);
     strcpy(liste[index], mot);
     free(mot);
