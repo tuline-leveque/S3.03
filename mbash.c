@@ -5,10 +5,11 @@
 #include <assert.h>
 
 #define MAXLI 2048
+#define MAXNBSTR 64
 #define S_FINI 1000
 
 //déclaration des variables
-char cmd[MAXLI];
+char cmd[MAXNBSTR];
 char path[MAXLI];
 char rep[MAXLI];
 char* motsCles[] = {"exit\n", "quitter\n", "pwd\n"};
@@ -20,11 +21,11 @@ void mbash();
 void quitter();
 int estMotCle(char* mot);
 char* getRepertoireCourant();
-void lancerCommandeListe(char* mot);
+void lancerCommandeListe(char* commande[MAXNBSTR]);
 void automateCd(char* commande);
 void commandeCd();
-void stringSlicer(char* string, char* result[MAXLI]);
-//void stringSlicerPutIntoList(char* mot, char* liste[MAXLI], int index);
+void stringSlicer(char* string, char* result[MAXNBSTR]);
+void stringSlicerPutIntoList(char* mot, char* liste[MAXNBSTR], int index);
 
 int main(int argc, char** argv) {
   printf("##################################################\n");
@@ -36,19 +37,18 @@ int main(int argc, char** argv) {
   printf("#   M     M   BBBBB   A     A  SSSSS   H   H     #\n");
   printf("#                                                #\n");
   printf("##################################################\n");
+
   while (rester) {
     printf("\n");
     printf("%s", getRepertoireCourant());
     printf(" : ");
     fgets(cmd, MAXLI, stdin);
+    cmd[strlen(cmd)-1]= '\0';
+    char* commande[MAXNBSTR] = {};
+    stringSlicer(cmd, commande);
+    int i = 0;
 
-    if(estMotCle(cmd)){
-      lancerCommandeListe(cmd);
-    } else {
-      printf("truc\n");
-      automateCd(cmd);
-      //mbash(cmd);
-    }
+    lancerCommandeListe(commande);
   }
   return 0;
 }
@@ -66,9 +66,7 @@ void quitter() {
 
 //méthode similaire à pwd
 char* getRepertoireCourant() {
-    if (strlen(rep) == 0) {
-        getcwd(rep, 200);
-    }
+    getcwd(rep, 200);
     return rep;
 }
 
@@ -84,19 +82,32 @@ int estMotCle(char* mot){
 }
 
 //méthode qui permet de lancer une commande de la liste de commandes
-void lancerCommandeListe(char* mot) {
-    if ((strcmp(mot,"quitter\n") == 0)||(strcmp(mot,"exit\n")) == 0) {
-        quitter();
-    }
-    else if (strcmp(mot,"pwd\n") == 0) {
-        printf("%s", getRepertoireCourant());
+void lancerCommandeListe(char* commande[MAXNBSTR]) {
+    int i = 0;
+    while(commande[i] != NULL){
+        char* mot = commande[i];
+        printf("mot : %s\n", mot);
+        if ((strcmp(mot,"quitter") == 0)||(strcmp(mot,"exit")) == 0) {
+            quitter();
+        }
+        else if (strcmp(mot,"pwd") == 0) {
+            printf("%s", getRepertoireCourant());
+        } else if (strcmp(mot,"cd") == 0){
+            printf("cd :%s",commande[i+1]);
+            commandeCd(commande[i+1]);
+            i++;
+        } else {
+            mbash(mot);
+        }
+        i++;
     }
 }
 
 void commandeCd(char* commande) {
-    mbash(commande);
+    chdir(commande);
+    //mbash(commande);
     //getRepertoireCourant();
-    getcwd(rep, MAXLI);
+    //getcwd(rep, MAXLI);
 }
 
 void commandeCdDirectory(char* directory) {
@@ -314,7 +325,7 @@ void automateCd(char* commande) {
       }
 }
 
-void stringSlicer(char* string, char* result[MAXLI]){
+void stringSlicer(char* string, char* result[MAXNBSTR]){
     //taille max d'un mot
     #define MEMOT 128
 
@@ -363,6 +374,7 @@ void stringSlicer(char* string, char* result[MAXLI]){
                         state = S_ESPACE;
                         break;
                     case '\0':
+                        stringSlicerPutIntoList(mot, result, nbResultats);
                         nbResultats++;
                         state = S_FINI;
                         break;
@@ -443,4 +455,11 @@ void stringSlicer(char* string, char* result[MAXLI]){
         }
         tete++;
     }
+}
+
+void stringSlicerPutIntoList(char* mot, char* liste[MAXLI], int index){
+    liste[index] = calloc(strlen(mot), 1);
+    strcpy(liste[index], mot);
+    free(mot);
+    mot = calloc(MEMOT, 1);
 }
