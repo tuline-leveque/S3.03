@@ -15,6 +15,7 @@ char rep[MAXLI];
 char* motsCles[] = {"exit\n", "quitter\n", "pwd\n"};
 int rester = 1;
 int pathidx;
+char* commande[MAXNBSTR] = {};
 
 //déclaration des fonctions
 void mbash();
@@ -44,10 +45,9 @@ int main(int argc, char** argv) {
     printf(" : ");
     fgets(cmd, MAXLI, stdin);
     cmd[strlen(cmd)-1]= '\0';
-    char* commande[MAXNBSTR] = {};
     stringSlicer(cmd, commande);
     int i = 0;
-
+    automateCd(cmd);
     lancerCommandeListe(commande);
   }
   return 0;
@@ -295,7 +295,6 @@ void automateCd(char* commande) {
                             strncpy(directory, &directory[3], longueur);
                         }
                         commandeCdDirectory(directory);
-                        printf("test");
                         state = S_FINI;
                         break;
                 }
