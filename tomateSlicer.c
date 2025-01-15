@@ -2,34 +2,40 @@
 #include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
-void stringSlicer(char* string, char** result);
+#define MAXLI 64
+
+void stringSlicer(char* string, char* result[MAXLI]);
+void stringSlicerPutIntoList(char* mot, char* liste[MAXLI], int index);
 
 int main(){
-    char** res = malloc(sizeof(char*)*1000);
-    stringSlicer("yohoho !", res);
-    printf("test !\n");
-    for(int i = 0; i < sizeof(res)/sizeof(char*); i++){
+    char* res[MAXLI] = {};
+    stringSlicer("Ceci est un test...   hahaha\"ca fonctionne '? \" '", res);
+    int i = 0;
+    while(res[i] != NULL){
         printf("|%s|",res[i]);
+        i++;
     }
 }
 
-void stringSlicer(char* string, char** result){
+void stringSlicer(char* string, char* result[MAXLI]){
+    //taille max d'un mot
+    #define MEMOT 128
+
     #define S_DEPART 0
     #define S_MOT 1
     #define S_APRES_SIMPLE_COTE 2
     #define S_APRES_DOUBLE_COTE 3
     #define S_ESPACE 4
     #define S_FINI 100
+
     char caractereCourant;
-    char** resultat = malloc(sizeof(char)*1000);
     int nbResultats = 0;
-    char mot[256];
-    mot[0] = '\0';
+    char* mot = calloc(MEMOT, 1);
     int state = 0;
     int tete = 0;
+
     while(state < S_FINI){
         caractereCourant = string[tete];
-        printf("caractere courant : %c\n", caractereCourant);
 
         switch(state){
             case S_DEPART :
@@ -55,16 +61,12 @@ void stringSlicer(char* string, char** result){
 
             case S_MOT :
                 strncat(mot,&string[tete], 1);
-                printf("mot : %s\n",mot);
 
                 switch(caractereCourant){
                     case ' ':
                         state = S_ESPACE;
                         break;
                     case '\0':
-                        printf("mot envoye : %s\n", mot);
-                        strcpy(resultat[nbResultats] , mot);
-                        mot[0] = '\0';
                         nbResultats++;
                         state = S_FINI;
                         break;
@@ -84,14 +86,11 @@ void stringSlicer(char* string, char** result){
 
                 switch(caractereCourant){
                     case '\0':
-                        strcpy(resultat[nbResultats] , mot);
-                        mot[0] = '\0';
                         nbResultats++;
                         state = S_FINI;
                         break;
                     case '\'':
-                        strcpy(resultat[nbResultats] , mot);
-                        mot[0] = '\0';
+                        stringSlicerPutIntoList(mot, result, nbResultats);
                         nbResultats++;
                         state = S_DEPART;
                         break;
@@ -103,14 +102,12 @@ void stringSlicer(char* string, char** result){
 
                 switch(caractereCourant){
                     case '\0':
-                        strcpy(resultat[nbResultats] , mot);
-                        mot[0] = '\0';
+                        stringSlicerPutIntoList(mot, result, nbResultats);
                         nbResultats++;
                         state = S_FINI;
                         break;
                     case '\"':
-                        strcpy(resultat[nbResultats] , mot);
-                        mot[0] = '\0';
+                        stringSlicerPutIntoList(mot, result, nbResultats);
                         nbResultats++;
                         state = S_DEPART;
                         break;
@@ -119,19 +116,20 @@ void stringSlicer(char* string, char** result){
 
             case S_ESPACE :
                 if(strlen(mot) != 0){
-                    strcpy(resultat[nbResultats] , mot);
-                    mot[0] = '\0';
+                    mot[strlen(mot)-1] = '\0';
+                    stringSlicerPutIntoList(mot, result, nbResultats);
                     nbResultats++;
-                    printf("mot dans espace : %s\n",mot);
                 }
                 switch(caractereCourant){
                     case ' ':
                         state = S_ESPACE;
                         break;
                     case '\'':
+                        strncat(mot,&string[tete], 1);
                         state = S_APRES_SIMPLE_COTE;
                         break;
                     case '\"':
+                        strncat(mot,&string[tete], 1);
                         state = S_APRES_DOUBLE_COTE;
                         break;
                     case '\0':
@@ -149,5 +147,11 @@ void stringSlicer(char* string, char** result){
         }
         tete++;
     }
-    result = resultat;
+}
+
+void stringSlicerPutIntoList(char* mot, char* liste[MAXLI], int index){
+    liste[index] = calloc(strlen(mot), 1);
+    strcpy(liste[index], mot);
+    free(mot);
+    mot = calloc(MEMOT, 1);
 }
