@@ -93,6 +93,7 @@ void lancerCommandeListe(char* commande[MAXNBSTR]) {
         else if (strcmp(mot,"pwd") == 0) {
             printf("%s", getRepertoireCourant());
         } else if (strcmp(mot,"cd") == 0){
+            printf("yahaha !\n");
             printf("cd :%s",commande[i+1]);
             commandeCd(commande[i+1]);
             i++;
@@ -104,14 +105,31 @@ void lancerCommandeListe(char* commande[MAXNBSTR]) {
 }
 
 void commandeCd(char* commande) {
-    chdir(commande);
-    //mbash(commande);
-    //getRepertoireCourant();
-    //getcwd(rep, MAXLI);
+    if (chdir(commande) == -1) {
+        printf("%s%s","Impossible de se placer dans le dossier ", commande);
+    } else {
+        printf("%s%s","Deplacement dans le dossier ", commande);
+        getcwd(rep, MAXLI);
+    }
 }
 
 void commandeCdDirectory(char* directory) {
-    if (chdir(directory) != 0) {
+
+    // char* directory;
+    // char* temporaire;
+    // int longueur;
+    // //à chaque fois qu'il y a un "../", on retire 3 caractères
+    // for (int i=0; i<compteurRetour; i++) {
+    //     temporaire = calloc(MAXLI, 1);
+    //     printf("directory :%s\n", directory);
+    //     longueur = strlen(directory)-3;
+    //     printf("%d",longueur);
+    //     strncpy(temporaire, &directory[3], longueur);
+    //     directory = calloc(MAXLI, 1);
+    //     strncpy(directory, temporaire, longueur);
+    // }
+
+    if (chdir(directory) == -1) {
        printf("%s%s","Impossible de se placer dans le dossier ", directory);
     } else {
         printf("%s%s","Déplacement dans le dossier ", directory);
@@ -203,6 +221,7 @@ void automateCd(char* commande) {
                         state = S_CD_DES_ESPACES;
                         break;
                     default :
+                        commandeCd(&commande[3]);
                         state = S_ERREUR;
                         break;
                 }
@@ -268,7 +287,8 @@ void automateCd(char* commande) {
                         state = S_DEUX_POINT_UN_SLASH;
                         break;
                     default :
-                        state = S_ERREUR;
+                        commandeCd(&commande[3]);
+                        state = S_FINI;
                         break;
                 }
                 break;
@@ -279,22 +299,18 @@ void automateCd(char* commande) {
                         compteurRetour ++;
                         state = S_UN_POINT;
                         break;
+                    case '\n':
+                        compteurRetour++;
+                        commandeCd(commande);
+                        state = S_FINI;
+                        break;
                     default:
                         compteurRetour ++;
-                        printf("commande cd ../nom\n");
+                        //printf("commande cd ../nom\n");
                         //on récupère la fin de la commande qui est le nom
                         //commande "cd ../nom"
                         //erreur ou non
-                        char directory[MAXLI];
-                        //on enlève cd espace
-                        int longueur = strlen(&cmd[3]);
-                        strncpy(directory, &cmd[3], longueur);
-                        //à chaque fois qu'il y a un "../", on retire 3 caractères
-                        for (int i=0; i<compteurRetour; i++) {
-                            longueur = strlen(&directory[3]);
-                            strncpy(directory, &directory[3], longueur);
-                        }
-                        commandeCdDirectory(directory);
+                        commandeCd(&commande[3]);
                         state = S_FINI;
                         break;
                 }
