@@ -193,7 +193,7 @@ void automateCd(char* commande) {
                     case '\n':
                         //printf("commande cd");
                          //code pour "cd"
-                         commandeCd(cmd);
+                         commandeCd(&commande[3]);
                          state = S_FINI;
                          break;
                     default :
@@ -236,7 +236,7 @@ void automateCd(char* commande) {
                     case '\n':
                         //printf("commande cd");
                         //commande "cd"
-                        commandeCd(cmd);
+                        commandeCd(&commande[3]);
                         state = S_FINI;
                         break;
                     default:
@@ -250,7 +250,7 @@ void automateCd(char* commande) {
                     case '\n':
                         //printf("commande cd ~\n");
                         //commande "cd ~"
-                        commandeCd(cmd);
+                        commandeCd(&commande[3]);
                         state = S_FINI;
                         break;
                     default :
@@ -258,7 +258,7 @@ void automateCd(char* commande) {
                         //on récupère la fin de la commande qui est le nom après la vague
                         //commande "cd ~nom"
                         //erreur ou non
-                        commandeCd(cmd);
+                        commandeCd(&commande[3]);
                         state = S_FINI;
                         break;
                 }
@@ -279,7 +279,7 @@ void automateCd(char* commande) {
                     case '\n':
                         //printf("commande cd ..\n");
                         //commande "cd .."
-                        commandeCd(cmd);
+                        commandeCd(&commande[3]);
                         state = S_FINI;
                         break;
                     case '/':
@@ -301,7 +301,7 @@ void automateCd(char* commande) {
                         break;
                     case '\n':
                         compteurRetour++;
-                        commandeCd(commande);
+                        commandeCd(&commande[3]);
                         state = S_FINI;
                         break;
                     default:
@@ -321,7 +321,7 @@ void automateCd(char* commande) {
                     case '\n':
                         //printf("commande cd /\n");
                         //commande "cd /"
-                        commandeCd(cmd);
+                        commandeCd(&commande[3]);
                         state = S_FINI;
                         break;
 //                    case ' ':
@@ -331,7 +331,7 @@ void automateCd(char* commande) {
                         //printf("commande cd/chemin\n");
                         //on récupère la fin de la commande qui est le chemin
                         //commande "cd /chemin"
-                        commandeCd(cmd);
+                        commandeCd(&commande[3]);
                         state = S_FINI;
                         break;
                 }
