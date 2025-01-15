@@ -155,6 +155,7 @@ void automateCd(char* commande) {
     int i = 0;
     int compteurRetour = 0;
     char caractereCourant;
+    char* temporaire2;
 
       while ( state < S_FINI ) {
           caractereCourant = commande[i];
@@ -250,7 +251,7 @@ void automateCd(char* commande) {
                     case '\n':
                         //printf("commande cd ~\n");
                         //commande "cd ~"
-                        commandeCd(&commande[3]);
+                        commandeCd("/");
                         state = S_FINI;
                         break;
                     default :
@@ -258,7 +259,11 @@ void automateCd(char* commande) {
                         //on récupère la fin de la commande qui est le nom après la vague
                         //commande "cd ~nom"
                         //erreur ou non
-                        commandeCd(&commande[3]);
+
+                        temporaire2 = calloc(MAXLI,1);
+                        strcpy(temporaire2,&commande[3]);
+                        temporaire2[0]= '/';
+                        commandeCd(temporaire2);
                         state = S_FINI;
                         break;
                 }
