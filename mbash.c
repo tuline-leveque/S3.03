@@ -50,7 +50,6 @@ int main(int argc, char** argv) {
   printf("#######################################################\n");
 
   while (rester) {
-    printf("\n");
     printf("%s", getRepertoireCourant());
     printf(" : ");
     fgets(cmd, MAXLI, stdin);
@@ -70,9 +69,9 @@ int main(int argc, char** argv) {
 }
 
 
-void mbash() {
-  printf("Execute: %s\n", cmd);
-  system(cmd);
+void mbash(char* com) {
+  printf("Execute: %s\n", com);
+  system(com);
 }
 
 //méthode similaire à ^C
@@ -91,16 +90,17 @@ char* getRepertoireCourant() {
 void lancerCommandeListe(char* commande[MAXNBSTR]) {
     int i = 0;
     while(commande[i] != NULL){
-        printf("nb iteration : %d\n",i+1);
+        //printf("nb iteration : %d\n",i+1);
+        //printf("commande i : %s\n",commande[i]);
         char* mot = commande[i];
         char* listeAvecEspaces[MAXNBSTR] = {};
         stringSlicer(mot, listeAvecEspaces, ' ');
 
-        int j = 0;
-        while (listeAvecEspaces[j] != NULL) {
-            printf("|%s|", commande[i]);
-            j++;
-        }
+//        int j = 0;
+//        while (j != 5) {
+//            printf("comm|%s|\n", commande[j]);
+//            j++;
+//        }
 
         if ((strcmp(listeAvecEspaces[0],"quitter") == 0)||(strcmp(listeAvecEspaces[0],"exit")) == 0) {
             quitter();
@@ -111,11 +111,12 @@ void lancerCommandeListe(char* commande[MAXNBSTR]) {
             //printf("yahaha !\n");
             //printf("cd :%s",commande[i+1]);
             automateCd(mot);
-            i++;
         } else if (strcmp(listeAvecEspaces[0], "echo") == 0) {
             ecrire(listeAvecEspaces[1]);
         } else if(strcmp(listeAvecEspaces[0], "color") == 0){
             changeColor(listeAvecEspaces[1]);
+        } else if (strcmp(listeAvecEspaces[0], "ls") == 0) {
+            mbash("dir");
         } else {
             mbash(mot);
         }
@@ -129,33 +130,9 @@ void ecrire(char* commande) {
 
 void commandeCd(char* commande) {
     if (chdir(commande) == -1) {
-        printf("%s%s","Impossible de se placer dans le dossier ", commande);
+        printf("%s%s\n","Impossible de se placer dans le dossier ", commande);
     } else {
-        printf("%s%s","Deplacement dans le dossier ", commande);
-        getcwd(rep, MAXLI);
-    }
-}
-
-void commandeCdDirectory(char* directory) {
-
-    // char* directory;
-    // char* temporaire;
-    // int longueur;
-    // //à chaque fois qu'il y a un "../", on retire 3 caractères
-    // for (int i=0; i<compteurRetour; i++) {
-    //     temporaire = calloc(MAXLI, 1);
-    //     printf("directory :%s\n", directory);
-    //     longueur = strlen(directory)-3;
-    //     printf("%d",longueur);
-    //     strncpy(temporaire, &directory[3], longueur);
-    //     directory = calloc(MAXLI, 1);
-    //     strncpy(directory, temporaire, longueur);
-    // }
-
-    if (chdir(directory) == -1) {
-       printf("%s%s","Impossible de se placer dans le dossier ", directory);
-    } else {
-        printf("%s%s","Déplacement dans le dossier ", directory);
+        printf("%s%s\n","Deplacement dans le dossier ", commande);
         getcwd(rep, MAXLI);
     }
 }
@@ -179,6 +156,7 @@ void automateCd(char* commande) {
     int compteurRetour = 0;
     char caractereCourant;
     char* temporaire2;
+    char* directory;
 
       while ( state < S_FINI ) {
           caractereCourant = commande[i];
@@ -241,12 +219,17 @@ void automateCd(char* commande) {
                         state = S_UN_SLASH;
                         break;
                     case ' ':
-                        printf("cas: cd espaces\n");
+                        //printf("cas: cd espaces\n");
                         state = S_CD_DES_ESPACES;
                         break;
                     default :
                         if (strlen(commande) > 3) {
-                            commandeCd(&commande[3]);
+                            printf("ici\n");
+                            directory = calloc(MAXLI,1);
+                            strcpy(directory,&commande[2]);
+                            directory[0] = '/';
+                            printf("directory : %s\n",directory);
+                            commandeCd(directory);
                         } else {
                             commandeCd("/");
                         }    
@@ -389,11 +372,13 @@ void stringSlicer(char* string, char* result[MAXNBSTR], char caractereSeparateur
 
     while(state < S_FINI){
         caractereCourant = string[tete];
-
         switch(state){
             case S_DEPART :
                 if (caractereCourant == caractereSeparateur) {
                     state = S_ESPACE;
+                } else if ((caractereCourant == 32)&&(caractereSeparateur != 32)) {
+                    printf("test\n");
+                    state = S_DEPART;
                 } else {
                     switch(caractereCourant){
                         case '\0':
@@ -411,7 +396,6 @@ void stringSlicer(char* string, char* result[MAXNBSTR], char caractereSeparateur
                             break;
                     }
                 }
-
             break;
 
             case S_MOT :
@@ -480,6 +464,9 @@ void stringSlicer(char* string, char* result[MAXNBSTR], char caractereSeparateur
 
                 if (caractereCourant == caractereSeparateur) {
                     state = S_ESPACE;
+                } else if ((caractereCourant == 32)&&(caractereSeparateur != 32)) {
+                    printf("test2\n");
+                    state = S_DEPART;
                 } else {
                     switch(caractereCourant){
                         case '\'':
