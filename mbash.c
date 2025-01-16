@@ -1,19 +1,25 @@
 #include <stdio.h>
-#include <signal.h>
 #include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <sys/wait.h>
-#include <assert.h>
 
 #define MAXLI 2048
 #define MAXNBSTR 64
 #define S_FINI 1000
 
+#define ANSI_COLOR_RED     "\x1b[31m"
+#define ANSI_COLOR_GREEN   "\x1b[32m"
+#define ANSI_COLOR_YELLOW  "\x1b[33m"
+#define ANSI_COLOR_BLUE    "\x1b[34m"
+#define ANSI_COLOR_MAGENTA "\x1b[35m"
+#define ANSI_COLOR_CYAN    "\x1b[36m"
+#define ANSI_COLOR_RESET   "\x1b[0m"
+
 //déclaration des variables
 char cmd[MAXNBSTR];
 char path[MAXLI];
 char rep[MAXLI];
+char* couleur = ANSI_COLOR_RESET;
 int rester = 1;
 int pathidx;
 char* commande[MAXNBSTR] = {};
@@ -30,6 +36,7 @@ void stringSlicerPutIntoList(char* mot, char* liste[MAXNBSTR], int index);
 void ecrire(char* commande);
 void mainPere();
 void mainFils();
+void changeColor(char* mot);
 
 int main(int argc, char** argv) {
   printf("#######################################################\n");
@@ -71,6 +78,7 @@ void mbash() {
 //méthode similaire à ^C
 void quitter() {
     rester = 0;
+    printf(ANSI_COLOR_RESET"");
 }
 
 //méthode similaire à pwd
@@ -98,7 +106,7 @@ void lancerCommandeListe(char* commande[MAXNBSTR]) {
             quitter();
         }
         else if (strcmp(listeAvecEspaces[0],"pwd") == 0) {
-            printf("%s", getRepertoireCourant());
+            printf( "%s", getRepertoireCourant()) ;
         } else if (strcmp(listeAvecEspaces[0],"cd") == 0){
             //printf("yahaha !\n");
             //printf("cd :%s",commande[i+1]);
@@ -106,6 +114,8 @@ void lancerCommandeListe(char* commande[MAXNBSTR]) {
             i++;
         } else if (strcmp(listeAvecEspaces[0], "echo") == 0) {
             ecrire(listeAvecEspaces[1]);
+        } else if(strcmp(listeAvecEspaces[0], "color") == 0){
+            changeColor(listeAvecEspaces[1]);
         } else {
             mbash(mot);
         }
@@ -502,34 +512,23 @@ void stringSlicerPutIntoList(char* mot, char* liste[MAXNBSTR], int index){
     mot = calloc(MEMOT, 1);
 }
 
-void mainPere(){
-    printf("#######################################################\n");
-    printf("#                                                     #\n");
-    printf("#   |M     |M   |BBBBB    |AAAAA   |SSSSS   |H  |H    #\n");
-    printf("#   |MM   |MM   |B   |B  |A    |A  |S       |H  |H    #\n");
-    printf("#   |M|M |M|M   |BBBBB   |AAAAAAA  |SSSSS   |HHHHH    #\n");
-    printf("#   |M  |M |M   |B   |B  |A    |A      |S   |H  |H    #\n");
-    printf("#   |M     |M   |BBBBB   |A    |A  |SSSSS   |H  |H    #\n");
-    printf("#                                                     #\n");
-    printf("#######################################################\n");
-
-    while (rester) {
-        printf("\n");
-        printf("%s", getRepertoireCourant());
-        printf(" : ");
-        fflush(stdout);
-        fgets(cmd, MAXLI, stdin);
-        cmd[strlen(cmd)-1]= '\0';
-        stringSlicer(cmd, commande);
-    int i = 0;
-    //automateCd(cmd);
-    lancerCommandeListe(commande);
-    fflush(stdout);
-    memset(commande, 0, sizeof commande);
-  }
-}
-
-void mainFils(){
-    printf("yahaha !\n");
-    fflush(stdout);
+void changeColor(char* mot){
+    if (strcmp(mot, "blue") == 0){
+        couleur = ANSI_COLOR_BLUE;
+    } else if (strcmp(mot, "cyan") == 0){
+        couleur = ANSI_COLOR_CYAN;
+    } else if (strcmp(mot, "green") == 0){
+        couleur = ANSI_COLOR_GREEN;
+    } else if (strcmp(mot, "magenta") == 0){
+        couleur = ANSI_COLOR_MAGENTA;
+    } else if (strcmp(mot, "red") == 0){
+        couleur = ANSI_COLOR_RED;
+    } else if (strcmp(mot, "yellow") == 0){
+        couleur = ANSI_COLOR_YELLOW;
+    } else if (strcmp(mot, "default") == 0){
+        couleur = ANSI_COLOR_RESET;
+    } else {
+        printf("couleur inexistante : %s",mot);
+    }
+    printf("%s", couleur);
 }
