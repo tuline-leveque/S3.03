@@ -23,7 +23,7 @@ char* getRepertoireCourant();
 void lancerCommandeListe(char* commande[MAXNBSTR]);
 void automateCd(char* commande);
 void commandeCd();
-void stringSlicer(char* string, char* result[MAXNBSTR]);
+void stringSlicer(char* string, char* result[MAXNBSTR], char caractereSeparateur);
 void stringSlicerPutIntoList(char* mot, char* liste[MAXNBSTR], int index);
 void ecrire(char* commande);
 
@@ -44,8 +44,13 @@ int main(int argc, char** argv) {
     printf(" : ");
     fgets(cmd, MAXLI, stdin);
     cmd[strlen(cmd)-1]= '\0';
-    stringSlicer(cmd, commande);
+    stringSlicer(cmd, commande, ';');
     int i = 0;
+    while (commande[i] != NULL) {
+        printf("|%s|", commande[i]);
+        i++;
+    }
+    printf("\n");
     //automateCd(cmd);
     lancerCommandeListe(commande);
     memset(commande, 0, sizeof commande);
@@ -55,7 +60,7 @@ int main(int argc, char** argv) {
 
 
 void mbash() {
-  printf("Execute: %s", cmd);
+  printf("Execute: %s\n", cmd);
   system(cmd);
 }
 
@@ -74,20 +79,29 @@ char* getRepertoireCourant() {
 void lancerCommandeListe(char* commande[MAXNBSTR]) {
     int i = 0;
     while(commande[i] != NULL){
+        printf("nb iteration : %d\n",i+1);
         char* mot = commande[i];
-        if ((strcmp(mot,"quitter") == 0)||(strcmp(mot,"exit")) == 0) {
+        char* listeAvecEspaces[MAXNBSTR] = {};
+        stringSlicer(mot, listeAvecEspaces, ' ');
+
+        int j = 0;
+        while (listeAvecEspaces[j] != NULL) {
+            printf("|%s|", commande[i]);
+            j++;
+        }
+
+        if ((strcmp(listeAvecEspaces[0],"quitter") == 0)||(strcmp(listeAvecEspaces[0],"exit")) == 0) {
             quitter();
         }
-        else if (strcmp(mot,"pwd") == 0) {
+        else if (strcmp(listeAvecEspaces[0],"pwd") == 0) {
             printf("%s", getRepertoireCourant());
-        } else if (strcmp(mot,"cd") == 0){
+        } else if (strcmp(listeAvecEspaces[0],"cd") == 0){
             //printf("yahaha !\n");
             //printf("cd :%s",commande[i+1]);
-            automateCd(cmd);
+            automateCd(mot);
             i++;
-        } else if (strcmp(mot, "echo") == 0) {
-            ecrire(commande[i+1]);
-            i++;
+        } else if (strcmp(listeAvecEspaces[0], "echo") == 0) {
+            ecrire(listeAvecEspaces[1]);
         } else {
             mbash(mot);
         }
@@ -344,10 +358,9 @@ void automateCd(char* commande) {
       }
 }
 
-void stringSlicer(char* string, char* result[MAXNBSTR]){
+void stringSlicer(char* string, char* result[MAXNBSTR], char caractereSeparateur){
     //taille max d'un mot
     #define MEMOT 128
-
     #define S_DEPART 0
     #define S_MOT 1
     #define S_APRES_SIMPLE_COTE 2
@@ -365,46 +378,49 @@ void stringSlicer(char* string, char* result[MAXNBSTR]){
 
         switch(state){
             case S_DEPART :
-                switch(caractereCourant){
-                    case ' ' :
-                        state = S_ESPACE;
-                        break;
-                    case '\0':
-                        state = S_FINI;
-                        break;
-                    case '\'':
-                        state = S_APRES_SIMPLE_COTE;
-                        break;
-                    case '\"':
-                        state = S_APRES_DOUBLE_COTE;
-                        break;
-                    default:
-                        strncat(mot,&string[tete], 1);
-                        state = S_MOT;
-                        break;
+                if (caractereCourant == caractereSeparateur) {
+                    state = S_ESPACE;
+                } else {
+                    switch(caractereCourant){
+                        case '\0':
+                            state = S_FINI;
+                            break;
+                        case '\'':
+                            state = S_APRES_SIMPLE_COTE;
+                            break;
+                        case '\"':
+                            state = S_APRES_DOUBLE_COTE;
+                            break;
+                        default:
+                            strncat(mot,&string[tete], 1);
+                            state = S_MOT;
+                            break;
+                    }
                 }
+
             break;
 
             case S_MOT :
                 strncat(mot,&string[tete], 1);
 
-                switch(caractereCourant){
-                    case ' ':
-                        state = S_ESPACE;
+                if (caractereCourant == caractereSeparateur) {
+                    state = S_ESPACE;
+                } else {
+                    switch(caractereCourant){
+                        case '\0':
+                            stringSlicerPutIntoList(mot, result, nbResultats);
+                            nbResultats++;
+                            state = S_FINI;
+                            break;
+                        case '\'':
+                            state = S_APRES_SIMPLE_COTE;
+                            break;
+                        case '\"':
+                            state = S_APRES_DOUBLE_COTE;
+                            break;
+                        default:
                         break;
-                    case '\0':
-                        stringSlicerPutIntoList(mot, result, nbResultats);
-                        nbResultats++;
-                        state = S_FINI;
-                        break;
-                    case '\'':
-                        state = S_APRES_SIMPLE_COTE;
-                        break;
-                    case '\"':
-                        state = S_APRES_DOUBLE_COTE;
-                        break;
-                    default:
-                    break;
+                    }
                 }
             break;
 
@@ -447,30 +463,29 @@ void stringSlicer(char* string, char* result[MAXNBSTR]){
                     stringSlicerPutIntoList(mot, result, nbResultats);
                     nbResultats++;
                 }
-                switch(caractereCourant){
-                    case ' ':
-                        state = S_ESPACE;
-                        break;
-                    case '\'':
-                        strncat(mot,&string[tete], 1);
-                        state = S_APRES_SIMPLE_COTE;
-                        break;
-                    case '\"':
-                        strncat(mot,&string[tete], 1);
-                        state = S_APRES_DOUBLE_COTE;
-                        break;
-                    case '\0':
-                        state = S_FINI;
-                        break;
-                    default:
-                        strncat(mot,&string[tete], 1);
-                        state = S_MOT;
-                        break;
 
+                if (caractereCourant == caractereSeparateur) {
+                    state = S_ESPACE;
+                } else {
+                    switch(caractereCourant){
+                        case '\'':
+                            strncat(mot,&string[tete], 1);
+                            state = S_APRES_SIMPLE_COTE;
+                            break;
+                        case '\"':
+                            strncat(mot,&string[tete], 1);
+                            state = S_APRES_DOUBLE_COTE;
+                            break;
+                        case '\0':
+                            state = S_FINI;
+                            break;
+                        default:
+                            strncat(mot,&string[tete], 1);
+                            state = S_MOT;
+                            break;
+                    }
                 }
-
             break;
-
         }
         tete++;
     }
