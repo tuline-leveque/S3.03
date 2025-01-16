@@ -1,7 +1,9 @@
 #include <stdio.h>
+#include <signal.h>
 #include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <sys/wait.h>
 #include <assert.h>
 
 #define MAXLI 2048
@@ -26,30 +28,18 @@ void commandeCd();
 void stringSlicer(char* string, char* result[MAXNBSTR]);
 void stringSlicerPutIntoList(char* mot, char* liste[MAXNBSTR], int index);
 void ecrire(char* commande);
+void mainPere();
+void mainFils();
 
 int main(int argc, char** argv) {
-  printf("#######################################################\n");
-  printf("#                                                     #\n");
-  printf("#   |M     |M   |BBBBB    |AAAAA   |SSSSS   |H  |H    #\n");
-  printf("#   |MM   |MM   |B   |B  |A    |A  |S       |H  |H    #\n");
-  printf("#   |M|M |M|M   |BBBBB   |AAAAAAA  |SSSSS   |HHHHH    #\n");
-  printf("#   |M  |M |M   |B   |B  |A    |A      |S   |H  |H    #\n");
-  printf("#   |M     |M   |BBBBB   |A    |A  |SSSSS   |H  |H    #\n");
-  printf("#                                                     #\n");
-  printf("#######################################################\n");
+  int pid = fork();
 
-  while (rester) {
-    printf("\n");
-    printf("%s", getRepertoireCourant());
-    printf(" : ");
-    fgets(cmd, MAXLI, stdin);
-    cmd[strlen(cmd)-1]= '\0';
-    stringSlicer(cmd, commande);
-    int i = 0;
-    //automateCd(cmd);
-    lancerCommandeListe(commande);
-    memset(commande, 0, sizeof commande);
-  }
+    if(pid == 0){
+        mainFils();
+    } else {
+        mainPere();
+    }
+
   return 0;
 }
 
@@ -481,4 +471,36 @@ void stringSlicerPutIntoList(char* mot, char* liste[MAXNBSTR], int index){
     strcpy(liste[index], mot);
     free(mot);
     mot = calloc(MEMOT, 1);
+}
+
+void mainPere(){
+    printf("#######################################################\n");
+    printf("#                                                     #\n");
+    printf("#   |M     |M   |BBBBB    |AAAAA   |SSSSS   |H  |H    #\n");
+    printf("#   |MM   |MM   |B   |B  |A    |A  |S       |H  |H    #\n");
+    printf("#   |M|M |M|M   |BBBBB   |AAAAAAA  |SSSSS   |HHHHH    #\n");
+    printf("#   |M  |M |M   |B   |B  |A    |A      |S   |H  |H    #\n");
+    printf("#   |M     |M   |BBBBB   |A    |A  |SSSSS   |H  |H    #\n");
+    printf("#                                                     #\n");
+    printf("#######################################################\n");
+
+    while (rester) {
+        printf("\n");
+        printf("%s", getRepertoireCourant());
+        printf(" : ");
+        fflush(stdout);
+        fgets(cmd, MAXLI, stdin);
+        cmd[strlen(cmd)-1]= '\0';
+        stringSlicer(cmd, commande);
+    int i = 0;
+    //automateCd(cmd);
+    lancerCommandeListe(commande);
+    fflush(stdout);
+    memset(commande, 0, sizeof commande);
+  }
+}
+
+void mainFils(){
+    printf("yahaha !\n");
+    fflush(stdout);
 }

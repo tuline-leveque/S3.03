@@ -9,7 +9,7 @@ void stringSlicerPutIntoList(char* mot, char* liste[MAXLI], int index);
 
 int main(){
     char* res[MAXLI] = {};
-    stringSlicer("Ceci est un test...   hahaha\"ca fonctionne '? \" '", res);
+    stringSlicer("ec truc ; sudo apt install crotte ; getInstance", res);
     int i = 0;
     while(res[i] != NULL){
         printf("|%s|",res[i]);
@@ -36,11 +36,12 @@ void stringSlicer(char* string, char* result[MAXLI]){
 
     while(state < S_FINI){
         caractereCourant = string[tete];
+        printf("caractereCourant : %c\n",caractereCourant);
 
         switch(state){
             case S_DEPART :
                 switch(caractereCourant){
-                    case ' ' :
+                    case ';' :
                         state = S_ESPACE;
                         break;
                     case '\0':
@@ -63,7 +64,7 @@ void stringSlicer(char* string, char* result[MAXLI]){
                 strncat(mot,&string[tete], 1);
 
                 switch(caractereCourant){
-                    case ' ':
+                    case ';':
                         state = S_ESPACE;
                         break;
                     case '\0':
@@ -121,7 +122,7 @@ void stringSlicer(char* string, char* result[MAXLI]){
                     nbResultats++;
                 }
                 switch(caractereCourant){
-                    case ' ':
+                    case ';':
                         state = S_ESPACE;
                         break;
                     case '\'':
