@@ -2,6 +2,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <time.h>
 
 #define MAXLI 2048
 #define MAXNBSTR 64
@@ -15,7 +16,17 @@
 #define ANSI_COLOR_CYAN    "\x1b[36m"
 #define ANSI_COLOR_RESET   "\x1b[0m"
 
+//Déclaration des structures
+    //time_t t = time(NULL);
+struct tm tm;// = *localtime(&t);
+struct commandeHistorique{
+    char* commande;
+    struct tm time;
+};
+
 //déclaration des variables
+struct commandeHistorique historiqueCommandes[MAXLI] = {};
+int nbCommandesHistorique = 0;
 char cmd[MAXNBSTR];
 char path[MAXLI];
 char rep[MAXLI];
@@ -54,12 +65,21 @@ int main(int argc, char** argv) {
     printf(" : ");
     fgets(cmd, MAXLI, stdin);
     cmd[strlen(cmd)-1]= '\0';
+
+    struct commandeHistorique ch;
+    ch.commande = calloc(sizeof(cmd), 1);
+    strcpy(ch.commande,cmd);
+    time_t t = time(NULL);
+    ch.time = *localtime(&t);
+    historiqueCommandes[nbCommandesHistorique] = ch;
+    nbCommandesHistorique++;
+
     stringSlicer(cmd, commande, ';');
     int i = 0;
-    while (commande[i] != NULL) {
-        printf("|%s|", commande[i]);
-        i++;
-    }
+    // while (commande[i] != NULL) {
+    //     printf("|%s|", commande[i]);
+    //     i++;
+    // }
     printf("\n");
     //automateCd(cmd);
     lancerCommandeListe(commande);
@@ -112,11 +132,26 @@ void lancerCommandeListe(char* commande[MAXNBSTR]) {
             //printf("cd :%s",commande[i+1]);
             automateCd(mot);
         } else if (strcmp(listeAvecEspaces[0], "echo") == 0) {
+            printf("ecrire : %s\n", listeAvecEspaces[1]);
             ecrire(listeAvecEspaces[1]);
         } else if(strcmp(listeAvecEspaces[0], "color") == 0){
             changeColor(listeAvecEspaces[1]);
         } else if (strcmp(listeAvecEspaces[0], "ls") == 0) {
             mbash("dir");
+        } else if (strcmp(listeAvecEspaces[0], "history") == 0) {
+            if(listeAvecEspaces[1] == NULL){
+                printf("--------History--------\n");
+                for(int i = 0; i < nbCommandesHistorique; i++){
+                    struct commandeHistorique c = historiqueCommandes[i];
+                    printf("%d - %d-%02d-%02d %02d:%02d:%02d : %s\n", i,c.time.tm_year + 1900, c.time.tm_mon + 1, c.time.tm_mday, c.time.tm_hour, c.time.tm_min, c.time.tm_sec, c.commande );
+                }
+                printf("-----------------------\n");
+            } else {
+                char* commandeARefaire[MAXNBSTR] = {};
+                stringSlicer(historiqueCommandes[atoi(listeAvecEspaces[1])].commande, commandeARefaire, ';');
+                lancerCommandeListe(commandeARefaire);
+            }
+            
         } else {
             mbash(mot);
         }
