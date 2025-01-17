@@ -16,15 +16,14 @@
 #define ANSI_COLOR_CYAN    "\x1b[36m"
 #define ANSI_COLOR_RESET   "\x1b[0m"
 
-//Déclaration des structures
-    //time_t t = time(NULL);
-struct tm tm;// = *localtime(&t);
+//Déclaration des structures -------------------------------------------------------------------------------------------
+struct tm tm;
 struct commandeHistorique{
     char* commande;
     struct tm time;
 };
 
-//déclaration des variables
+//Déclaration des variables --------------------------------------------------------------------------------------------
 struct commandeHistorique historiqueCommandes[MAXLI] = {};
 int nbCommandesHistorique = 0;
 char cmd[MAXNBSTR];
@@ -35,7 +34,7 @@ int rester = 1;
 int pathidx;
 char* commande[MAXNBSTR] = {};
 
-//déclaration des fonctions
+//Déclaration des fonctions --------------------------------------------------------------------------------------------
 void mbash();
 void quitter();
 char* getRepertoireCourant();
@@ -49,6 +48,9 @@ void mainPere();
 void mainFils();
 void changeColor(char* mot);
 
+
+
+/* ------------------------------------------- MAIN ------------------------------------------- */
 int main(int argc, char** argv) {
   printf("#######################################################\n");
   printf("#                                                     #\n");
@@ -65,7 +67,6 @@ int main(int argc, char** argv) {
     printf(" : ");
     fgets(cmd, MAXLI, stdin);
     cmd[strlen(cmd)-1]= '\0';
-
     struct commandeHistorique ch;
     ch.commande = calloc(sizeof(cmd), 1);
     strcpy(ch.commande,cmd);
@@ -73,15 +74,9 @@ int main(int argc, char** argv) {
     ch.time = *localtime(&t);
     historiqueCommandes[nbCommandesHistorique] = ch;
     nbCommandesHistorique++;
-
+    //Permet de séparer les différents appels de commande
     stringSlicer(cmd, commande, ';');
-    int i = 0;
-    // while (commande[i] != NULL) {
-    //     printf("|%s|", commande[i]);
-    //     i++;
-    // }
-    printf("\n");
-    //automateCd(cmd);
+    //Lance la commande écrite
     lancerCommandeListe(commande);
     memset(commande, 0, sizeof commande);
   }
@@ -89,89 +84,168 @@ int main(int argc, char** argv) {
 }
 
 
+/* ------------------------------------------- MBASH ------------------------------------------- */
+/**
+  * Fonction mbash qui permet d'exécuter une commande
+  * Paramètre com : commande à exécuter
+ **/
 void mbash(char* com) {
   printf("Execute: %s\n", com);
   system(com);
 }
 
-//méthode similaire à ^C
+
+/* ------------------------------------------- QUITTER ------------------------------------------- */
+/**
+  * Fonction quitter qui permet de fermer le programme
+ **/
 void quitter() {
+    //Termine la boucle du main
     rester = 0;
     printf(ANSI_COLOR_RESET"");
 }
 
-//méthode similaire à pwd
+
+/* ------------------------------------------- GETREPERTOIRECOURANT ------------------------------------------- */
+/**
+  * Fonction getRepertoireCourant qui permet de récupérer le chemin du répertoire courant (équivalent à "pwd")
+  * Retourne le répertoire courant
+ **/
 char* getRepertoireCourant() {
     getcwd(rep, 200);
     return rep;
 }
 
-//méthode qui permet de lancer une commande de la liste de commandes
+
+/* ------------------------------------------- LANCERCOMMANDELISTE ------------------------------------------- */
+/**
+  * Fonction lancerCommandeListe qui permet de lancer une commande de la liste de commande
+  * Paramètre commande : liste des commandes à exécuter
+ **/
 void lancerCommandeListe(char* commande[MAXNBSTR]) {
     int i = 0;
+    //Tant qu'il y a des commandes à exécuter
     while(commande[i] != NULL){
-        //printf("nb iteration : %d\n",i+1);
-        //printf("commande i : %s\n",commande[i]);
+
         char* mot = commande[i];
         char* listeAvecEspaces[MAXNBSTR] = {};
+        /*On récupère chaque partie de la commande (séparée par un espace)
+          Par exemple, echo bla ==> [echo, bla]*/
         stringSlicer(mot, listeAvecEspaces, ' ');
 
-//        int j = 0;
-//        while (j != 5) {
-//            printf("comm|%s|\n", commande[j]);
-//            j++;
-//        }
-
+        //Cas dans lequel la commande entrée est "quitter" ou "exit"
         if ((strcmp(listeAvecEspaces[0],"quitter") == 0)||(strcmp(listeAvecEspaces[0],"exit")) == 0) {
             quitter();
         }
+        //Cas dans lequel la commande entrée est "pwd"
         else if (strcmp(listeAvecEspaces[0],"pwd") == 0) {
             printf( "%s", getRepertoireCourant()) ;
-        } else if (strcmp(listeAvecEspaces[0],"cd") == 0){
-            //printf("yahaha !\n");
-            //printf("cd :%s",commande[i+1]);
+        }
+        //Cas dans lequel la commande entrée est "cd"
+        else if (strcmp(listeAvecEspaces[0],"cd") == 0) {
+            //Lance l'automate qui vérifie si la commande est valide et l'exécute
             automateCd(mot);
-        } else if (strcmp(listeAvecEspaces[0], "echo") == 0) {
-            printf("ecrire : %s\n", listeAvecEspaces[1]);
+        }
+        //Cas dans lequel la commande entrée est "echo"
+        else if (strcmp(listeAvecEspaces[0], "echo") == 0) {
             ecrire(listeAvecEspaces[1]);
-        } else if(strcmp(listeAvecEspaces[0], "color") == 0){
+        }
+        //Cas dans lequel la commande entrée est "color"
+        else if(strcmp(listeAvecEspaces[0], "color") == 0){
             changeColor(listeAvecEspaces[1]);
-        } else if (strcmp(listeAvecEspaces[0], "ls") == 0) {
+        }
+        //Cas dans lequel la commande entrée est "ls"
+        else if (strcmp(listeAvecEspaces[0], "ls") == 0) {
+            //L'équivalent de la commande "ls" en c est la commande "dir"
             mbash("dir");
-        } else if (strcmp(listeAvecEspaces[0], "history") == 0) {
-            if(listeAvecEspaces[1] == NULL){
-                printf("--------History--------\n");
-                for(int i = 0; i < nbCommandesHistorique; i++){
+        }
+        //Cas dans lequel la commande entrée est "history" ou "historique"
+        else if ((strcmp(listeAvecEspaces[0], "history") == 0)||(strcmp(listeAvecEspaces[0], "historique") == 0)) {
+            if (listeAvecEspaces[1] == NULL) {
+                printf("--------Historique--------\n");
+                //Pour chaque ligne de l'historique
+                for (int i = 0; i < nbCommandesHistorique; i++) {
                     struct commandeHistorique c = historiqueCommandes[i];
+                    //On écrit l'historique de cette commande
                     printf("%d - %d-%02d-%02d %02d:%02d:%02d : %s\n", i,c.time.tm_year + 1900, c.time.tm_mon + 1, c.time.tm_mday, c.time.tm_hour, c.time.tm_min, c.time.tm_sec, c.commande );
                 }
                 printf("-----------------------\n");
             } else {
+                //S'il y a un numéro, alors on reexécute la commande contenant le numéro donné (chaque commande de l'historique est numérotée)
                 char* commandeARefaire[MAXNBSTR] = {};
                 stringSlicer(historiqueCommandes[atoi(listeAvecEspaces[1])].commande, commandeARefaire, ';');
                 lancerCommandeListe(commandeARefaire);
             }
-            
-        } else {
+        }
+        //Cas dans lequel la commande entrée ne correspond à aucun autre cas fait par nos soins
+        else {
             mbash(mot);
         }
         i++;
     }
 }
 
-void ecrire(char* commande) {
-    printf("%s\n", commande);
+
+/* ------------------------------------------- ECRIRE ------------------------------------------- */
+/**
+  * Fonction ecrire qui permet d'écrire un texte donné dans la fenêtre (équivalent à "echo")
+  * Paramètre texte : texte à écrire
+ **/
+void ecrire(char* texte) {
+    printf("%s\n", texte);
 }
 
+
+/* ------------------------------------------- COMMANDECD ------------------------------------------- */
+/**
+  * Fonction commandeCd qui permet d'exécuter une commande "cd"
+  * Paramètre commande : commandes à exécuter
+ **/
 void commandeCd(char* commande) {
+    //Si le dossier dans lequel on souhaite se situer n'est pas valide
     if (chdir(commande) == -1) {
         printf("%s%s\n","Impossible de se placer dans le dossier ", commande);
     } else {
         printf("%s%s\n","Deplacement dans le dossier ", commande);
+        //On n'oublie pas de changer le répertoire
         getcwd(rep, MAXLI);
     }
 }
 
+
+/* ------------------------------------------- CHANGECOLOR ------------------------------------------- */
+/**
+  * Fonction changeColor qui permet de changer la couleur du texte du programme
+  * Paramètre mot : couleur à mettre
+ **/
+void changeColor(char* mot){
+    if (strcmp(mot, "blue") == 0){
+        couleur = ANSI_COLOR_BLUE;
+    } else if (strcmp(mot, "cyan") == 0){
+        couleur = ANSI_COLOR_CYAN;
+    } else if (strcmp(mot, "green") == 0){
+        couleur = ANSI_COLOR_GREEN;
+    } else if (strcmp(mot, "magenta") == 0){
+        couleur = ANSI_COLOR_MAGENTA;
+    } else if (strcmp(mot, "red") == 0){
+        couleur = ANSI_COLOR_RED;
+    } else if (strcmp(mot, "yellow") == 0){
+        couleur = ANSI_COLOR_YELLOW;
+    } else if (strcmp(mot, "default") == 0){
+        couleur = ANSI_COLOR_RESET;
+    } else {
+        printf("Couleur inexistante : %s",mot);
+    }
+    printf("%s", couleur);
+}
+
+
+
+/* ------------------------------------------- AUTOMATE CD ------------------------------------------- */
+/**
+  * Fonction automateCd qui est l'automate permettant de vérifier la validité d'une commande "cd"
+  * Paramètre commande : commandes "cd" à vérifier
+ **/
 void automateCd(char* commande) {
     #define S_DEPART 0
     #define S_UN_SLASH 1
@@ -183,8 +257,7 @@ void automateCd(char* commande) {
     #define S_CD 7
     #define S_CD_ESPACE 8
     #define S_CD_DES_ESPACES 9
-
-    #define S_ERREUR 1001
+    #define S_ERREUR 999
 
     int state = S_DEPART;
     int i = 0;
@@ -194,13 +267,12 @@ void automateCd(char* commande) {
     char* directory;
 
       while ( state < S_FINI ) {
-          caractereCourant = commande[i];
-          i = i + 1;
+        caractereCourant = commande[i];
+        i = i + 1;
         switch (state) {
             case S_DEPART: // ------------------------------------------------
               switch (caractereCourant) {
                   case 'c':
-                    //printf("cas: c\n");
                     state = S_C;
                     break;
                   default:
@@ -211,7 +283,6 @@ void automateCd(char* commande) {
             case S_C: // ------------------------------------------------
                 switch (caractereCourant) {
                     case 'd': {
-                        //printf("cas: cd\n");
                         state = S_CD;
                         break;
                     }
@@ -224,12 +295,10 @@ void automateCd(char* commande) {
             case S_CD: // ------------------------------------------------
                 switch (caractereCourant) {
                     case ' ':
-                        //printf("cas: cd espace\n");
                         state = S_CD_ESPACE;
                         break;
                     case '\0':
-                        //printf("commande cd");
-                         //code pour "cd"
+                         //Cas où la commande entrée est "cd"
                          commandeCd("/");
                          state = S_FINI;
                          break;
@@ -242,33 +311,29 @@ void automateCd(char* commande) {
             case S_CD_ESPACE: // ------------------------------------------------
                 switch (caractereCourant) {
                     case '~':
-                        //printf("cas: cd ~\n");
                         state = S_UNE_VAGUE;
                         break;
                     case '.':
-                        //printf("cas: cd .\n");
                         state = S_UN_POINT;
                         break;
                     case '/':
-                        //printf("cas: cd /\n");
                         state = S_UN_SLASH;
                         break;
                     case ' ':
-                        //printf("cas: cd espaces\n");
                         state = S_CD_DES_ESPACES;
                         break;
                     default :
+                        //Le cas par défaut est le cas où un chemin est donné après un "cd "
                         if (strlen(commande) > 3) {
-                            printf("ici\n");
                             directory = calloc(MAXLI,1);
+                            //On récupère uniquement le chemin (&commande[2] permet de retirer "cd")
                             strcpy(directory,&commande[2]);
                             directory[0] = '/';
-                            printf("directory : %s\n",directory);
                             commandeCd(directory);
                         } else {
                             commandeCd("/");
-                        }    
-                        state = S_ERREUR;
+                        }
+                        state = S_FINI;
                         break;
                 }
                 break;
@@ -276,12 +341,10 @@ void automateCd(char* commande) {
             case S_CD_DES_ESPACES: // ------------------------------------------------
                 switch (caractereCourant) {
                     case ' ':
-                        //printf("cas: cd espaces\n");
                         state = S_CD_DES_ESPACES;
                         break;
                     case '\0':
-                        //printf("commande cd");
-                        //commande "cd"
+                        //Cas où la commande entrée est "cd"
                         commandeCd(&commande[3]);
                         state = S_FINI;
                         break;
@@ -294,18 +357,15 @@ void automateCd(char* commande) {
             case S_UNE_VAGUE: // ------------------------------------------------
                 switch (caractereCourant) {
                     case '\0':
-                        //printf("commande cd ~\n");
-                        //commande "cd ~"
+                        //Cas où la commande entrée est "cd ~"
                         commandeCd("/");
                         state = S_FINI;
                         break;
                     default :
-                        //printf("commande cd ~nom\n");
-                        //on récupère la fin de la commande qui est le nom après la vague
-                        //commande "cd ~nom"
-                        //erreur ou non
-
+                        //Le cas par défaut est le cas où un chemin est donné après la vague ~
                         temporaire2 = calloc(MAXLI,1);
+
+                        //On récupère uniquement le chemin (&commande[3] permet de retirer "cd ~")
                         strcpy(temporaire2,&commande[3]);
                         temporaire2[0]= '/';
                         commandeCd(temporaire2);
@@ -313,10 +373,10 @@ void automateCd(char* commande) {
                         break;
                 }
                 break;
+
             case S_UN_POINT: // ------------------------------------------------
                 switch (caractereCourant) {
                     case '.':
-                        //printf("cas: cd ..\n");
                         state = S_DEUX_POINTS;
                         break;
                     default:
@@ -324,28 +384,26 @@ void automateCd(char* commande) {
                         break;
                 }
                 break;
+
             case S_DEUX_POINTS: // ------------------------------------------------
                 switch (caractereCourant) {
                     case '\0':
-                        //printf("commande cd ..\n");
-                        //commande "cd .."
+                        //Cas où la commande entrée est "cd .."
                         commandeCd(&commande[3]);
                         state = S_FINI;
                         break;
                     case '/':
-                        //printf("cas: cd ../\n");
                         state = S_DEUX_POINT_UN_SLASH;
                         break;
                     default :
-                        commandeCd(&commande[3]);
-                        state = S_FINI;
+                        state = S_ERREUR;
                         break;
                 }
                 break;
+
             case S_DEUX_POINT_UN_SLASH: // ------------------------------------------------
                 switch (caractereCourant) {
                     case '.':
-                        //printf("cas: cd ../.\n");
                         compteurRetour ++;
                         state = S_UN_POINT;
                         break;
@@ -356,10 +414,7 @@ void automateCd(char* commande) {
                         break;
                     default:
                         compteurRetour ++;
-                        //printf("commande cd ../nom\n");
-                        //on récupère la fin de la commande qui est le nom
-                        //commande "cd ../nom"
-                        //erreur ou non
+                        //Cas où la commande entrée est "cd ../nom"
                         commandeCd(&commande[3]);
                         state = S_FINI;
                         break;
@@ -369,29 +424,36 @@ void automateCd(char* commande) {
             case S_UN_SLASH: // ------------------------------------------------
                 switch (caractereCourant) {
                     case '\0':
-                        //printf("commande cd /\n");
-                        //commande "cd /"
-                        commandeCd(&commande[3]);
+                        //Cas où la commande entrée est "cd /"
+                        commandeCd("/");
                         state = S_FINI;
                         break;
-//                    case ' ':
-//                        state = S_SLASH_DES_ESPACES;
-//                        break;
                     default :
-                        //printf("commande cd/chemin\n");
-                        //on récupère la fin de la commande qui est le chemin
-                        //commande "cd /chemin"
+                        //Cas où la commande entrée est "cd /chemin"
                         commandeCd(&commande[3]);
                         state = S_FINI;
                         break;
                 }
                 break;
+
+            case S_ERREUR: // ------------------------------------------------
+                printf("Erreur : La commande cd entree n'est pas valide.\n");
+                state = S_FINI;
+                break;
         }
       }
 }
 
+
+/* ------------------------------------------- AUTOMATE STRINGSLICER ------------------------------------------- */
+/**
+  * Fonction stringSlicer qui est l'automate permettant de découper une chaîne en sous-chaînes
+  * Paramètre string : chaîne à séparer
+  * Paramètre result : liste dans laquelle on va stocker les différentes sous-chaînes
+  * Paramètre caractereSeparateur : caractère qui doit servir de séparateur
+ **/
 void stringSlicer(char* string, char* result[MAXNBSTR], char caractereSeparateur){
-    //taille max d'un mot
+    //Taille maximale d'un mot
     #define MEMOT 128
     #define S_DEPART 0
     #define S_MOT 1
@@ -408,11 +470,10 @@ void stringSlicer(char* string, char* result[MAXNBSTR], char caractereSeparateur
     while(state < S_FINI){
         caractereCourant = string[tete];
         switch(state){
-            case S_DEPART :
+            case S_DEPART : // ------------------------------------------------
                 if (caractereCourant == caractereSeparateur) {
                     state = S_ESPACE;
                 } else if ((caractereCourant == 32)&&(caractereSeparateur != 32)) {
-                    printf("test\n");
                     state = S_DEPART;
                 } else {
                     switch(caractereCourant){
@@ -433,7 +494,7 @@ void stringSlicer(char* string, char* result[MAXNBSTR], char caractereSeparateur
                 }
             break;
 
-            case S_MOT :
+            case S_MOT : // ------------------------------------------------
                 strncat(mot,&string[tete], 1);
 
                 if (caractereCourant == caractereSeparateur) {
@@ -457,7 +518,7 @@ void stringSlicer(char* string, char* result[MAXNBSTR], char caractereSeparateur
                 }
             break;
 
-            case S_APRES_SIMPLE_COTE:
+            case S_APRES_SIMPLE_COTE : // ------------------------------------------------
                 strncat(mot,&string[tete], 1);
 
                 switch(caractereCourant){
@@ -466,31 +527,28 @@ void stringSlicer(char* string, char* result[MAXNBSTR], char caractereSeparateur
                         state = S_FINI;
                         break;
                     case '\'':
-                        //stringSlicerPutIntoList(mot, result, nbResultats);
                         nbResultats++;
                         state = S_DEPART;
                         break;
                 }
             break;
 
-            case S_APRES_DOUBLE_COTE:
+            case S_APRES_DOUBLE_COTE : // ------------------------------------------------
                 strncat(mot,&string[tete], 1);
 
                 switch(caractereCourant){
                     case '\0':
-                        //stringSlicerPutIntoList(mot, result, nbResultats);
                         nbResultats++;
                         state = S_FINI;
                         break;
                     case '\"':
-                        //stringSlicerPutIntoList(mot, result, nbResultats);
                         nbResultats++;
                         state = S_DEPART;
                         break;
                 }
             break;
 
-            case S_ESPACE :
+            case S_ESPACE : // ------------------------------------------------
                 if(strlen(mot) != 0){
                     mot[strlen(mot)-1] = '\0';
                     stringSlicerPutIntoList(mot, result, nbResultats);
@@ -500,7 +558,6 @@ void stringSlicer(char* string, char* result[MAXNBSTR], char caractereSeparateur
                 if (caractereCourant == caractereSeparateur) {
                     state = S_ESPACE;
                 } else if ((caractereCourant == 32)&&(caractereSeparateur != 32)) {
-                    printf("test2\n");
                     state = S_DEPART;
                 } else {
                     switch(caractereCourant){
@@ -527,30 +584,17 @@ void stringSlicer(char* string, char* result[MAXNBSTR], char caractereSeparateur
     }
 }
 
+
+/* ------------------------------------------- STRINGSLICERPUTINTOLIST ------------------------------------------- */
+/**
+  * Fonction stringSlicerPutIntoList qui permet d'insérer une chaîne dans une liste
+  * Paramètre mot : chaîne à insérer
+  * Paramètre liste : liste dans laquelle on va stocker le mot
+  * Paramètre index : index de l'endroit à insérer dans la liste
+ **/
 void stringSlicerPutIntoList(char* mot, char* liste[MAXNBSTR], int index){
     liste[index] = calloc(strlen(mot), 1);
     strcpy(liste[index], mot);
     free(mot);
     mot = calloc(MEMOT, 1);
-}
-
-void changeColor(char* mot){
-    if (strcmp(mot, "blue") == 0){
-        couleur = ANSI_COLOR_BLUE;
-    } else if (strcmp(mot, "cyan") == 0){
-        couleur = ANSI_COLOR_CYAN;
-    } else if (strcmp(mot, "green") == 0){
-        couleur = ANSI_COLOR_GREEN;
-    } else if (strcmp(mot, "magenta") == 0){
-        couleur = ANSI_COLOR_MAGENTA;
-    } else if (strcmp(mot, "red") == 0){
-        couleur = ANSI_COLOR_RED;
-    } else if (strcmp(mot, "yellow") == 0){
-        couleur = ANSI_COLOR_YELLOW;
-    } else if (strcmp(mot, "default") == 0){
-        couleur = ANSI_COLOR_RESET;
-    } else {
-        printf("couleur inexistante : %s",mot);
-    }
-    printf("%s", couleur);
 }
