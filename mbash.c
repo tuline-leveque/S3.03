@@ -72,12 +72,13 @@ int main(int argc, char** argv) {
     strcpy(ch.commande,cmd);
     time_t t = time(NULL);
     ch.time = *localtime(&t);
-    historiqueCommandes[nbCommandesHistorique] = ch;
-    nbCommandesHistorique++;
     //Permet de séparer les différents appels de commande
     stringSlicer(cmd, commande, ';');
     //Lance la commande écrite
     lancerCommandeListe(commande);
+    //On ajoute la commande à l'historique
+    historiqueCommandes[nbCommandesHistorique] = ch;
+    nbCommandesHistorique++;
     memset(commande, 0, sizeof commande);
   }
   return 0;
@@ -162,19 +163,23 @@ void lancerCommandeListe(char* commande[MAXNBSTR]) {
         //Cas dans lequel la commande entrée est "history" ou "historique"
         else if ((strcmp(listeAvecEspaces[0], "history") == 0)||(strcmp(listeAvecEspaces[0], "historique") == 0)) {
             if (listeAvecEspaces[1] == NULL) {
-                printf("--------Historique--------\n");
+                printf("-------- Historique --------\n");
                 //Pour chaque ligne de l'historique
                 for (int i = 0; i < nbCommandesHistorique; i++) {
                     struct commandeHistorique c = historiqueCommandes[i];
                     //On écrit l'historique de cette commande
                     printf("%d - %d-%02d-%02d %02d:%02d:%02d : %s\n", i,c.time.tm_year + 1900, c.time.tm_mon + 1, c.time.tm_mday, c.time.tm_hour, c.time.tm_min, c.time.tm_sec, c.commande );
                 }
-                printf("-----------------------\n");
+                printf("----------------------------\n");
             } else {
-                //S'il y a un numéro, alors on reexécute la commande contenant le numéro donné (chaque commande de l'historique est numérotée)
-                char* commandeARefaire[MAXNBSTR] = {};
-                stringSlicer(historiqueCommandes[atoi(listeAvecEspaces[1])].commande, commandeARefaire, ';');
-                lancerCommandeListe(commandeARefaire);
+                if (nbCommandesHistorique > atoi(listeAvecEspaces[1])) {
+                    //S'il y a un numéro, alors on réexécute la commande contenant le numéro donné (chaque commande de l'historique est numérotée)
+                    char* commandeARefaire[MAXNBSTR] = {};
+                    stringSlicer(historiqueCommandes[atoi(listeAvecEspaces[1])].commande, commandeARefaire, ';');
+                    lancerCommandeListe(commandeARefaire);
+                } else {
+                    printf("Ce numero d'historique est invalide.\n");
+                }
             }
         }
         //Cas dans lequel la commande entrée ne correspond à aucun autre cas fait par nos soins
@@ -527,6 +532,7 @@ void stringSlicer(char* string, char* result[MAXNBSTR], char caractereSeparateur
                         state = S_FINI;
                         break;
                     case '\'':
+                        stringSlicerPutIntoList(mot, result, nbResultats);
                         nbResultats++;
                         state = S_DEPART;
                         break;
@@ -538,10 +544,12 @@ void stringSlicer(char* string, char* result[MAXNBSTR], char caractereSeparateur
 
                 switch(caractereCourant){
                     case '\0':
+                        stringSlicerPutIntoList(mot, result, nbResultats);
                         nbResultats++;
                         state = S_FINI;
                         break;
                     case '\"':
+                        stringSlicerPutIntoList(mot, result, nbResultats);
                         nbResultats++;
                         state = S_DEPART;
                         break;
